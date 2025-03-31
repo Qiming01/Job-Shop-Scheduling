@@ -43,3 +43,4 @@
 
 # 如果使用 Clangd，忽略索引文件
 /.cache/
+/.venv/

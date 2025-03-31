@@ -6,11 +6,12 @@
 #define JOBSHOPSCHEDULING_GRAPH_H
 
 #include "operation.h"
+#include <fstream>
 #include <vector>
 /**
  * 析取图
  */
-class Graph {
+struct Graph {
     int job_num;      // 工件数
     int operation_num;// 工序数
 
@@ -23,4 +24,6 @@ class Graph {
     std::vector<int> first_op_in_machine;// 每台机器的第一个工序id
     std::vector<int> last_op_in_machine; // 每台机器的最后一个工序id
 };
+
+
 #endif//JOBSHOPSCHEDULING_GRAPH_H
