@@ -1,0 +1,45 @@
+# 忽略 CMake 生成的构建目录
+/build/
+/out/
+/bin/
+/lib/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Makefile
+/cmake-build-debug/
+/cmake-build-release/
+
+# 忽略 Visual Studio 相关文件
+/.vs/
+/*.sln
+/*.vcxproj
+/*.vcxproj.filters
+/*.vcxproj.user
+
+# 忽略 Xcode 相关文件
+*.xcodeproj
+*.xcworkspace
+*.xcuser*
+
+# 忽略编译生成的二进制文件
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+*.dylib
+
+# 忽略编辑器或 IDE 生成的文件
+*.swp
+*.swo
+*~
+*.vscode/
+*.idea/
+*.DS_Store
+*.log
+
+# 如果使用 Clangd，忽略索引文件
+/.cache/
