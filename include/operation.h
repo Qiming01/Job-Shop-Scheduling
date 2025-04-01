@@ -16,12 +16,27 @@ struct Operation {
         : operation_id(operation_id), operation_cnt(operation_cnt), machine_id(machine_id), time(time) {}
 };
 
+/**
+ * 机器上的工序列表
+ */
+struct MachineOperation {
+    std::vector<std::vector<int>> operation_ids;    // operation_ids[i] 表示机器i上的所有工序id
+    explicit MachineOperation(const Instance &instance) {
+        operation_ids.resize(instance.operation_num);   // 每个作业的操作数等于机器的个数
+        for (int i = 0; i < instance.job_num; ++i) {
+            for (int j = 0; j < instance.operation_num; ++j) {
+                operation_ids[instance.data[i][j].first].emplace_back(i * instance.operation_num + j + 1);
+            }
+        }
+    }
+};
+
 struct OperationList {
     int job_num;
     int operation_num;
     std::vector<Operation> operations;
 
-    explicit OperationList(Instance instance) noexcept : job_num(instance.job_num), operation_num(instance.operation_num) {
+    explicit OperationList(const Instance& instance) noexcept : job_num(instance.job_num), operation_num(instance.operation_num) {
         int operation_id = 0;
         operations.emplace_back(operation_id++, 0, 0, 0);// 头节点
         for (int i = 0; i < instance.job_num; ++i) {
@@ -55,4 +70,6 @@ struct OperationList {
         return operations[operation_id];
     }
 };
+
+
 #endif//JOBSHOPSCHEDULING_OPERATION_H
