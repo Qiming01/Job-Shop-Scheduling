@@ -4,17 +4,19 @@
 #include "graph.h"
 #include "instance.h"
 #include "operation.h"
-#include <algorithm>
-#include <fstream>
 #include <iostream>
-#include <limits>
-#include <vector>
+#include <deque>
+#include "schedule.h"
 
-Graph generate_initial_solution(const Instance& instance);
 // 测试代码
 int main() {
-    Instance instance = load_instance(R"(../../instance/simple/3.txt)");
+    Instance instance = load_instance(R"(../../instance/ft/ft10.txt)");
     MachineOperation machine_operation(instance);
     OperationList operation_list(instance);
+    auto graph = generateRandomInitialSolution(instance);
+    auto que = graph.toptoplogical_sort(true);
+    for (auto i : que) {
+        std::cout << i << " ";
+    }
     return 0;
 }

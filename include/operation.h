@@ -8,7 +8,7 @@
 #include <vector>
 struct Operation {
     int operation_id; // 工序id
-    int operation_cnt;// 第几道工序
+    int operation_cnt;// 工件的第几道工序
     int machine_id;   // 需要在哪一个机器上完成
     int time;         // 执行时间
 
@@ -36,7 +36,7 @@ struct OperationList {
     int operation_num;
     std::vector<Operation> operations;
 
-    explicit OperationList(const Instance& instance) noexcept : job_num(instance.job_num), operation_num(instance.operation_num) {
+    explicit OperationList(const Instance& instance) : job_num(instance.job_num), operation_num(instance.operation_num) {
         int operation_id = 0;
         operations.emplace_back(operation_id++, 0, 0, 0);// 头节点
         for (int i = 0; i < instance.job_num; ++i) {
@@ -48,6 +48,10 @@ struct OperationList {
     }
 
     Operation &operator[](int id) {
+        return operations[id];
+    }
+
+    const Operation &operator[](int id) const {
         return operations[id];
     }
 

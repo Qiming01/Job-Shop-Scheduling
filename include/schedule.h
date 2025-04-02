@@ -9,6 +9,8 @@
 #include "graph.h"
 #include <random>
 #include <algorithm>
+
+Graph generateRandomInitialSolution(const Instance &instance);
 class Schedule {
 public:
     explicit Schedule(const Instance& instance) noexcept : operation_list(instance), machine_operation(instance)

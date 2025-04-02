@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <unordered_map>
+#include <random>
 //Graph generate_initial_solution(const Instance& instance) {
 //    OperationList op_list(instance);
 //    Graph graph;
@@ -94,3 +95,143 @@
 //
 //    return graph;
 //}
+
+/**
+ * 使用Giffler-Thompson算法生成JSSP问题的随机初始解
+ * @param instance JSSP问题实例
+ * @return 生成的调度图
+ */
+Graph generateRandomInitialSolution(const Instance &instance) {
+    int job_num = instance.job_num;
+    int operation_num = instance.operation_num;
+
+    // 初始化调度图
+    Graph graph;
+    graph.job_num = job_num;
+    graph.operation_num = operation_num;
+
+    // 初始化边
+    int total_operations = job_num * operation_num + 2; // 包含虚拟头尾节点
+    graph.operation_edges.resize(total_operations, -1);
+    graph.machine_edges.resize(total_operations, -1);
+    graph.reverse_operation_edges.resize(total_operations, -1);
+    graph.reverse_machine_edges.resize(total_operations, -1);
+
+    // 初始化工件的第一个和最后一个工序
+    graph.first_job_operation.resize(job_num, -1);
+    graph.last_job_operation.resize(job_num, -1);
+    graph.first_machine_operation.resize(operation_num, -1);
+    graph.last_machine_operation.resize(operation_num, -1);
+
+    // 将工序按照工件顺序组织
+    OperationList operations(instance);
+
+    // 创建机器上的工序列表
+    MachineOperation machine_operation(instance);
+
+    // Giffler-Thompson算法实现
+    // 1. 初始化
+    std::vector<bool> scheduled(job_num * operation_num + 1, false); // 标记哪些工序已经被调度
+    std::vector<int> machine_ready_time(operation_num, 0); // 每台机器的就绪时间
+    std::vector<int> job_ready_time(job_num, 0); // 每个工件的就绪时间
+
+    // 工件的当前工序索引
+    std::vector<int> current_job_operation(job_num, 0);
+
+    // 2. 主循环：直到所有工序都被调度
+    for (int scheduled_count = 0; scheduled_count < job_num * operation_num; scheduled_count++) {
+        // 找出所有可以调度的工序
+        std::vector<std::pair<int, int>> candidates; // (job_id, op_index)
+
+        // 遍历所有的工件
+        for (int job_id = 0; job_id < job_num; job_id++) {
+            int op_index = current_job_operation[job_id];   // 当前工件执行到哪一个工序了
+            if (op_index < operation_num) { // 还有工序未被调度
+                candidates.emplace_back(job_id, op_index);
+            }
+        }
+
+        // 找出最早完成的工序
+        int earliest_completion_time = INT_MAX;
+        std::vector<std::pair<int, int>> earliest_ops;
+
+        for (auto& candidate : candidates) {
+            int job_id = candidate.first;
+            int op_index = candidate.second;
+
+            int machine_id = instance.data[job_id][op_index].first;
+            int process_time = instance.data[job_id][op_index].second;
+
+            int start_time = std::max(machine_ready_time[machine_id], job_ready_time[job_id]);
+            int completion_time = start_time + process_time;
+
+            if (completion_time < earliest_completion_time) {
+                earliest_completion_time = completion_time;
+                earliest_ops.clear();
+                earliest_ops.emplace_back(job_id, op_index);
+            } else if (completion_time == earliest_completion_time) {
+                earliest_ops.emplace_back(job_id, op_index);
+            }
+        }
+
+        // 从最早完成的工序中随机选择一个
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dist(0, earliest_ops.size() - 1);
+        int selected_index = dist(gen);
+
+        int selected_job = earliest_ops[selected_index].first;
+        int selected_op_index = earliest_ops[selected_index].second;
+        int selected_machine = instance.data[selected_job][selected_op_index].first;
+        int selected_process_time = instance.data[selected_job][selected_op_index].second;
+
+        // 计算开始时间和完成时间
+        int start_time = std::max(machine_ready_time[selected_machine], job_ready_time[selected_job]);
+        int completion_time = start_time + selected_process_time;
+
+        // 更新就绪时间
+        machine_ready_time[selected_machine] = completion_time;
+        job_ready_time[selected_job] = completion_time;
+
+        // 更新当前工件的工序索引
+        current_job_operation[selected_job]++;
+
+        // 更新图结构
+        int operation_id = selected_job * operation_num + selected_op_index + 1;
+
+        // 更新工件的工序边
+        if (selected_op_index == 0) {
+            graph.first_job_operation[selected_job] = operation_id;
+        } else {
+            int prev_operation_id = selected_job * operation_num + selected_op_index;
+            graph.operation_edges[prev_operation_id] = operation_id;
+            graph.reverse_operation_edges[operation_id] = prev_operation_id;
+        }
+
+        if (selected_op_index == operation_num - 1) {
+            graph.last_job_operation[selected_job] = operation_id;
+        }
+
+        // 更新机器的工序边
+        if (graph.first_machine_operation[selected_machine] == -1) {
+            graph.first_machine_operation[selected_machine] = operation_id;
+        } else {
+            int prev_machine_op = graph.last_machine_operation[selected_machine];
+            graph.machine_edges[prev_machine_op] = operation_id;
+            graph.reverse_machine_edges[operation_id] = prev_machine_op;
+        }
+
+        graph.last_machine_operation[selected_machine] = operation_id;
+
+        // 标记为已调度
+        scheduled[operation_id] = true;
+    }
+    for (int i = 1; i <= job_num; i++) {
+        graph.operation_edges[i * operation_num] = total_operations - 1;
+    }
+    for (int i = 0; i < job_num; i++) {
+        graph.reverse_operation_edges[i * operation_num + 1] = 0;
+    }
+
+    return graph;
+}
