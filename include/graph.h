@@ -38,8 +38,36 @@ struct Graph {
     std::vector<int> first_machine_operation;// 每台机器的第一个工序id
     std::vector<int> last_machine_operation;  // 每台机器的最后一个工序id
 
-    std::deque<int> toptoplogical_sort(bool reverse = false) const;
+    [[nodiscard]] std::deque<int> topological_sort(bool reverse = false) const;
 };
 
+
+Graph generate_random_initial_solution(const Instance &instance);
 bool test_toptoplogical_sort();
+
+// 计算开始和结束时间的结构体
+struct OperationTimeInfo {
+    int operation_id;
+    int job_id;
+    int operation_cnt;
+    int machine_id;
+    int start_time;
+    int end_time;
+};
+
+/**
+ * 计算调度图中每个工序的开始时间和结束时间
+ * @param graph 调度图
+ * @param OperationList 操作集合
+ * @return 包含每个工序调度信息的向量
+ */
+std::vector<OperationTimeInfo> calculateScheduleTimes(const Graph& graph, const OperationList& op_list);
+
+/**
+ * 将调度结果导出为CSV文件
+ * @param schedule 调度结果
+ * @param filename 导出文件名
+ */
+void exportToCSV(const std::vector<OperationTimeInfo>& schedule, const std::string& filename);
+
 #endif//JOBSHOPSCHEDULING_GRAPH_H

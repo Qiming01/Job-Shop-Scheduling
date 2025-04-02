@@ -10,21 +10,11 @@
 #include <random>
 #include <algorithm>
 
-Graph generateRandomInitialSolution(const Instance &instance);
 class Schedule {
 public:
     explicit Schedule(const Instance& instance) noexcept : operation_list(instance), machine_operation(instance)
     {
-        MachineOperation rand_ops = machine_operation;
-        // 使用随机设备生成种子
-        std::random_device rd;
-        std::mt19937 g(rd());
-
-
-        for (auto& op_list : rand_ops.operation_ids) {
-            std::shuffle(op_list.begin(), op_list.end(), g);
-        }
-
+        graph = generate_random_initial_solution(instance);
     }
 
 private:

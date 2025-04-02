@@ -8,12 +8,13 @@
 #include <vector>
 struct Operation {
     int operation_id; // 工序id
+    int job_id;       // 工件id
     int operation_cnt;// 工件的第几道工序
     int machine_id;   // 需要在哪一个机器上完成
     int time;         // 执行时间
 
-    Operation(int operation_id, int operation_cnt, int machine_id, int time)
-        : operation_id(operation_id), operation_cnt(operation_cnt), machine_id(machine_id), time(time) {}
+    Operation(int operation_id,int job_id, int operation_cnt, int machine_id, int time)
+        : operation_id(operation_id),job_id(job_id), operation_cnt(operation_cnt), machine_id(machine_id), time(time) {}
 };
 
 /**
@@ -38,13 +39,13 @@ struct OperationList {
 
     explicit OperationList(const Instance& instance) : job_num(instance.job_num), operation_num(instance.operation_num) {
         int operation_id = 0;
-        operations.emplace_back(operation_id++, 0, 0, 0);// 头节点
+        operations.emplace_back(operation_id++, 0, 0, 0, 0);// 头节点
         for (int i = 0; i < instance.job_num; ++i) {
             for (int j = 0; j < instance.operation_num; ++j) {
-                operations.emplace_back(operation_id++, j + 1, instance.data[i][j].first, instance.data[i][j].second);
+                operations.emplace_back(operation_id++,i + 1, j + 1, instance.data[i][j].first, instance.data[i][j].second);
             }
         }
-        operations.emplace_back(operation_id++, 0, 0, 0);// 尾节点
+        operations.emplace_back(operation_id++,0, 0, 0, 0);// 尾节点
     }
 
     Operation &operator[](int id) {
