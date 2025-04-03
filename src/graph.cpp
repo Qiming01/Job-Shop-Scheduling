@@ -5,26 +5,6 @@
 #include <cassert>
 #include <random>
 
-bool test_topological_sort() {
-    Graph graph;
-    graph.job_num = 3;
-    graph.operation_num = 3;
-    graph.first_job_operation = {1, 4, 7};
-    graph.first_machine_operation = {4, 5, 7};
-    graph.last_job_operation = {3, 6, 9};
-    graph.last_machine_operation = {3, 6, 8};
-    graph.machine_edges = {-1, 8, 6, -1, 1, 9, -1, 2, -1, 3, -1};
-    graph.operation_edges = {-1, 2, 3, 10, 5, 6, 10, 8, 9, 10, -1};
-    graph.reverse_machine_edges = {-1, 4, 7, 9, -1, -1, 2, -1, 1, 5, -1};
-    graph.reverse_operation_edges = {-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, -1};
-    auto que = graph.topological_sort();
-    std::deque<int> check_que{0, 4, 7, 5, 1, 2, 8, 6, 9, 3, 10};
-    assert(que == check_que);
-    que = graph.topological_sort(true);
-    check_que = {10, 3, 6, 9, 2, 8, 5, 7, 1, 4, 0};
-    assert(que == check_que);
-    return true;
-}
 std::deque<int> Graph::topological_sort(bool reverse) const {
     int n = job_num * operation_num + 2;
     std::vector<int> in_degree(n, 0);
@@ -249,64 +229,23 @@ Graph generate_random_initial_solution(const Instance &instance) {
 }
 
 
-/**
- * 计算调度图中每个工序的开始时间和结束时间
- * @param graph 调度图
- * @param OperationList 操作集合
- * @return 包含每个工序调度信息的向量
- */
-std::vector<StartTimeInfo> calculateScheduleTimes(const Graph &graph, const OperationList &op_list) {
-    std::vector<StartTimeInfo> schedule(graph.job_num * graph.operation_num + 2);
-    auto sequence = graph.topological_sort();
-    for (auto op_id: sequence) {
-        int start_time = 0;
-        int prev_op_id = graph.reverse_operation_edges[op_id];
-        int prev_machine_id = graph.reverse_machine_edges[op_id];
-        // 如果该工件有前一个同工件的操作，则更新开始时间
-        if (prev_op_id != -1) {
-            start_time = schedule[prev_op_id].end_time;
-        }
-        // 如果该工件有前一个同机器的操作，则更新开始时间
-        if (prev_machine_id != -1) {
-            start_time = std::max(start_time, schedule[prev_machine_id].end_time);
-        }
-        schedule[op_id].start_time = start_time;
-        schedule[op_id].end_time = schedule[op_id].start_time + op_list[op_id].time;
-        schedule[op_id].job_id = op_list[op_id].job_id;
-        schedule[op_id].machine_id = op_list[op_id].machine_id;
-        schedule[op_id].operation_id = op_id;
-        schedule[op_id].operation_cnt = op_list[op_id].operation_cnt;
-    }
-    return schedule;
-}
-
-/**
- * 将调度结果导出为CSV文件
- * @param schedule 调度结果
- * @param filename 导出文件名
- */
-void exportToCSV(const std::vector<StartTimeInfo> &schedule, const std::string &filename) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return;
-    }
-
-    // 写入CSV头
-    file << "id,job,op,machine,start,end\n";
-
-    // 写入数据
-    for (const auto &op: schedule) {
-        if (op.operation_id == 0 || op.operation_id == schedule.size() - 1) {
-            continue;
-        }
-        file << op.operation_id << ","
-             << op.job_id << ","
-             << op.operation_cnt << ","
-             << op.machine_id << ","
-             << op.start_time << ","
-             << op.end_time << "\n";
-    }
-    file.close();
-    std::cout << "Schedule exported to " << filename << std::endl;
+bool test_topological_sort() {
+    Graph graph;
+    graph.job_num = 3;
+    graph.operation_num = 3;
+    graph.first_job_operation = {1, 4, 7};
+    graph.first_machine_operation = {4, 5, 7};
+    graph.last_job_operation = {3, 6, 9};
+    graph.last_machine_operation = {3, 6, 8};
+    graph.machine_edges = {-1, 8, 6, -1, 1, 9, -1, 2, -1, 3, -1};
+    graph.operation_edges = {-1, 2, 3, 10, 5, 6, 10, 8, 9, 10, -1};
+    graph.reverse_machine_edges = {-1, 4, 7, 9, -1, -1, 2, -1, 1, 5, -1};
+    graph.reverse_operation_edges = {-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, -1};
+    auto que = graph.topological_sort();
+    std::deque<int> check_que{0, 4, 7, 5, 1, 2, 8, 6, 9, 3, 10};
+    assert(que == check_que);
+    que = graph.topological_sort(true);
+    check_que = {10, 3, 6, 9, 2, 8, 5, 7, 1, 4, 0};
+    assert(que == check_que);
+    return true;
 }

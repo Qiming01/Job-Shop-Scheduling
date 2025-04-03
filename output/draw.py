@@ -1,184 +1,116 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.patches import Patch
+import matplotlib.cm as cm
 import numpy as np
-from collections import defaultdict
-import sys
 
-# 从文件读取数据
-def load_data_from_file(file_path):
-    try:
-        # 读取CSV文件
-        df = pd.read_csv(file_path)
+# 从文件读取CSV数据
+csv_file_path = 'jssp_schedule.csv'
+df = pd.read_csv(csv_file_path)
 
-        # 打印列名以进行调试
-        print("CSV文件中的列名:", df.columns.tolist())
+# 获取唯一的作业ID
+unique_jobs = sorted(df['Job'].unique())
+job_count = len(unique_jobs)
 
-        # 检查必需的列是否存在
-        required_columns = ['id', 'job', 'op', 'machine', 'start', 'end']
-        missing_columns = [col for col in required_columns if col not in df.columns]
+# 使用colormap动态生成足够的颜色
+cmap = cm.get_cmap('tab20')  # 使用tab20颜色图可提供20种不同颜色
+if job_count <= 20:
+    # 如果作业数不超过20，直接使用tab20
+    job_colors = {job: cmap(i % 20) for i, job in enumerate(unique_jobs)}
+else:
+    # 如果作业数超过20，使用hsv colormap生成更多颜色
+    cmap = cm.get_cmap('hsv')
+    job_colors = {job: cmap(i / job_count) for i, job in enumerate(unique_jobs)}
 
-        if missing_columns:
-            print(f"警告: CSV文件缺少以下列: {missing_columns}")
-            return None
+# 创建图表
+fig, ax = plt.subplots(figsize=(15, 8))
 
-        column_mapping = {
-            'id': 'operation_id',
-            'job': 'job_id',
-            'op': 'op_number',
-            'machine': 'machine_id',
-            'start': 'start_time',
-            'end': 'end_time'
-        }
+# 设置y轴（机器）标签 - 0号机器在最上方，依次向下
+machines = sorted(df['Machine'].unique())
+# 翻转机器顺序，使0号机器在最上方
+machines_reversed = machines[::-1]
+machine_positions = {m: i for i, m in enumerate(machines_reversed)}
+machine_labels = [f'Machine {m}' for m in machines_reversed]
 
-        for old_name, new_name in column_mapping.items():
-            if old_name in df.columns:
-                df = df.rename(columns={old_name: new_name})
+plt.yticks(range(len(machines)), machine_labels)
 
-        print("重命名后的列名:", df.columns.tolist())
-        print(f"成功加载数据。共有 {len(df)} 条调度记录。")
-        return df
-    except Exception as e:
-        print(f"读取文件时出错: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
+# 绘制每个操作的条形
+for _, row in df.iterrows():
+    # 获取任务信息
+    id = row['ID']
+    job = row['Job']
+    operation = row['Operation']
+    machine = row['Machine']
+    start = row['StartTime']
+    end = row['EndTime']
+    is_critical = row['IsCritical']
+    duration = end - start
 
-# 计算关键路径
-def find_critical_path(df):
-    try:
-        # 找到最后完成的时间点
-        project_end = df['end_time'].max()
+    # 获取机器在图表中的位置
+    machine_pos = machine_positions[machine]
 
-        # 从最后完成的时间点开始，找出关键路径
-        critical_path = []
-        current_time = project_end
+    # 绘制条形
+    bar = ax.barh(
+        machine_pos,
+        duration,
+        left=start,
+        height=0.5,
+        color=job_colors[job],
+        edgecolor='black',
+        alpha=0.8
+    )
 
-        while current_time > 0:
-            # 找到结束时间等于current_time的操作
-            candidates = df[df['end_time'] == current_time]
-            if len(candidates) == 0:
-                break
+    # 在条形中添加文本标签（工作ID和操作ID）
+    ax.text(
+        start + duration/2,
+        machine_pos,
+        #f'J{job}-{operation}',
+        f'{id}',
+        ha='center',
+        va='center',
+        color='black',
+        fontweight='bold',
+        fontsize=8
+    )
 
-            # 选择其中一个操作（可能有多个）
-            op = candidates.iloc[0]
-            critical_path.append(op['operation_id'])
-            current_time = op['start_time']  # 更新current_time为该操作的开始时间
+    # 为关键块添加红色边框
+    if is_critical == 1:
+        rect = patches.Rectangle(
+            (start, machine_pos-0.25),
+            duration,
+            0.5,
+            linewidth=2,
+            edgecolor='red',
+            facecolor='none'
+        )
+        ax.add_patch(rect)
+#
+# # 为每10个作业创建一个图例列
+# legend_entries_per_column = 10
+# legend_columns = max(1, job_count // legend_entries_per_column + (1 if job_count % legend_entries_per_column else 0))
+#
+# legend_elements = [Patch(facecolor=job_colors[job], edgecolor='black', label=f'Job {job}')
+#                    for job in unique_jobs]
+# legend_elements.append(Patch(facecolor='none', edgecolor='red', linewidth=2, label='Critical'))
+#
+# ax.legend(handles=legend_elements, loc='upper right', ncol=legend_columns, fontsize='small')
 
-            # 如果已经到达项目开始
-            if current_time == 0:
-                break
+# 设置标题和轴标签
+ax.set_title('Job Shop Scheduling Gantt Chart')
+ax.set_xlabel('Time')
+ax.set_ylabel('Machine')
 
-        return critical_path
-    except Exception as e:
-        print(f"计算关键路径时出错: {e}")
-        import traceback
-        traceback.print_exc()
-        return []
+# 设置 x 轴范围
+max_time = df['EndTime'].max()
+ax.set_xlim(0, max_time * 1.05)
 
-# 绘制甘特图
-def plot_gantt_chart(df, critical_ops):
-    try:
-        # 为不同的作业分配不同的颜色
-        unique_jobs = df['job_id'].unique()
-        colors = plt.cm.tab10(np.linspace(0, 1, len(unique_jobs)))
-        job_colors = {job: colors[i] for i, job in enumerate(unique_jobs)}
+# 设置 y 轴范围
+ax.set_ylim(-0.5, len(machines)-0.5)
 
-        # 获取机器数量
-        n_machines = df['machine_id'].nunique()
+# 设置网格
+ax.grid(True, axis='x', linestyle='--', alpha=0.7)
 
-        # 创建图表
-        fig, ax = plt.subplots(figsize=(14, 7))
-
-        # 设置Y轴标签为机器ID
-        ax.set_yticks(range(n_machines))
-        ax.set_yticklabels([f'Machine {i}' for i in range(n_machines)])
-
-        # 绘制甘特图的每个任务块
-        for _, row in df.iterrows():
-            op_id = row['operation_id']
-
-            # 创建矩形表示每个操作
-            rect = patches.Rectangle(
-                (row['start_time'], row['machine_id'] - 0.4),  # (x, y)
-                row['end_time'] - row['start_time'],  # width
-                0.8,  # height
-                linewidth=1,
-                edgecolor='black',
-                facecolor=job_colors[row['job_id']],
-                alpha=0.7
-            )
-            ax.add_patch(rect)
-
-            # 在矩形中间添加任务ID
-            operation_text = f"{row['job_id']}-{row['op_number']}"
-            ax.text(
-                row['start_time'] + (row['end_time'] - row['start_time']) / 2,
-                row['machine_id'],
-                operation_text,
-                ha='center',
-                va='center',
-                fontsize=9
-            )
-
-            # 如果是关键路径上的操作，添加红色边框强调
-            if op_id in critical_ops:
-                critical_rect = patches.Rectangle(
-                    (row['start_time'], row['machine_id'] - 0.4),  # (x, y)
-                    row['end_time'] - row['start_time'],  # width
-                    0.8,  # height
-                    linewidth=2,
-                    edgecolor='red',
-                    facecolor='none',
-                    linestyle='-',
-                    )
-                ax.add_patch(critical_rect)
-
-        # # 为图表添加图例
-        # legend_handles = [patches.Patch(color=job_colors[job], label=f'Job {job}') for job in unique_jobs]
-        # legend_handles.append(patches.Patch(edgecolor='red', facecolor='none', linewidth=2, label='Critical Path'))
-        # ax.legend(handles=legend_handles, loc='upper right')
-
-        # 设置X轴和Y轴的范围
-        max_time = df['end_time'].max()
-        ax.set_xlim(0, max_time * 1.05)
-        ax.set_ylim(-0.5, n_machines - 0.5)
-
-        # 添加网格和标题
-        ax.grid(True, axis='x', linestyle='--', alpha=0.7)
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Machines')
-        ax.set_title('Job Shop Scheduling Gantt Chart')
-
-        plt.tight_layout()
-        plt.show()
-    except Exception as e:
-        print(f"绘制甘特图时出错: {e}")
-        import traceback
-        traceback.print_exc()
-
-# 主程序
-def main():
-    # 获取命令行参数中的文件路径，或使用默认路径
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-    else:
-        file_path = "jssp_schedule.csv"  # 默认文件路径
-
-    print(f"尝试从 {file_path} 加载数据...")
-
-    # 加载数据
-    df = load_data_from_file(file_path)
-
-    if df is not None:
-        # 计算关键路径
-        critical_ops = find_critical_path(df)
-        print(f"关键路径操作: {critical_ops}")
-
-        # 绘制甘特图
-        plot_gantt_chart(df, critical_ops)
-    else:
-        print("无法继续，请检查文件路径和格式。")
-
-if __name__ == "__main__":
-    main()
+# 显示图表
+plt.tight_layout()
+plt.show()

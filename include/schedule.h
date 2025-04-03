@@ -35,13 +35,16 @@ public:
     explicit Schedule(const Instance &instance) noexcept : operation_list(instance), machine_operation(instance), makespan(0) {
         graph = generate_random_initial_solution(instance);
         calculate_time_info();
-        update_critical_operations();
         update_critical_blocks();
+
+
     }
 
+    void export_to_csv(const std::string &filename);
+
 private:
+    bool is_critical_operation(int operation_id);
     void calculate_time_info();
-    void update_critical_operations();
     void update_critical_blocks();
 
 private:
@@ -51,7 +54,12 @@ private:
 
     int makespan;
     std::vector<OperationTimeInfo> time_info;
-    std::vector<int> critical_operations;
     std::vector<std::vector<int>> critical_blocks;
 };
+
+inline bool Schedule::is_critical_operation(int operation_id) {
+    return (time_info[operation_id].forward_path_length + time_info[operation_id].backward_path_length == makespan);
+}
+
+
 #endif//JOBSHOPSCHEDULING_SCHEDULE_H
