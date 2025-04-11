@@ -153,6 +153,7 @@ public:
      * @return Best makespan found so far
      */
     [[nodiscard]] int makespan() const { return best_schedule.makespan; }
+    [[nodiscard]] unsigned long long get_iter() const { return iteration; }
 
     /**
      * Execute the tabu search algorithm
@@ -160,6 +161,14 @@ public:
      * @param condition Optional termination condition function
      */
     void search(unsigned long long max_iteration, const std::function<bool()> &condition = [] { return false; });
+
+    /**
+     * Export best schedule to CSV file
+     * @param filename Filename to export to
+     */
+    void export_result(const char *filename) {
+        best_schedule.export_to_csv(filename);
+    }
 
 protected:
     /**

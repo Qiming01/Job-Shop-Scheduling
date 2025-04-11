@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 import numpy as np
 
 # 从文件读取CSV数据
-csv_file_path = 'jssp_schedule.csv'
+csv_file_path = 'result.csv'
 df = pd.read_csv(csv_file_path)
 
 # 获取唯一的作业ID
@@ -63,9 +63,9 @@ for _, row in df.iterrows():
 
     # 在条形中添加文本标签（工作ID和操作ID）
     ax.text(
-        start + duration/2,
+        start + duration / 2,
         machine_pos,
-        #f'J{job}-{operation}',
+        # f'J{job}-{operation}',
         f'{id}',
         ha='center',
         va='center',
@@ -77,7 +77,7 @@ for _, row in df.iterrows():
     # 为关键块添加红色边框
     if is_critical == 1:
         rect = patches.Rectangle(
-            (start, machine_pos-0.25),
+            (start, machine_pos - 0.25),
             duration,
             0.5,
             linewidth=2,
@@ -106,7 +106,7 @@ max_time = df['EndTime'].max()
 ax.set_xlim(0, max_time * 1.05)
 
 # 设置 y 轴范围
-ax.set_ylim(-0.5, len(machines)-0.5)
+ax.set_ylim(-0.5, len(machines) - 0.5)
 
 # 设置网格
 ax.grid(True, axis='x', linestyle='--', alpha=0.7)

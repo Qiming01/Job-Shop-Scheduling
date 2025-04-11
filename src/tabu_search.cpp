@@ -180,60 +180,73 @@ int TabuSearch::approximate_evaluation(const Action &action) const {
     auto &graph = tmp.graph;
 
 
-    // Modify disjunctive graph edges based on action direction
+    // Update disjunctive graph edges based on move direction
     if (action.direction == ActionDirection::FORWARD) {
-        int ms_u = graph.machine_edges[action.which];
-        int mp_u = graph.reverse_machine_edges[action.which];
-        int mp_v = graph.reverse_machine_edges[action.where];
-        graph.machine_edges[action.which] = action.where;
-        graph.reverse_machine_edges[action.where] = action.which;
+        // Forward move: swap operation 'which' before 'where'
+        int ms_u = graph.machine_successor[action.which];
+        int mp_u = graph.machine_predecessor[action.which];
+        int mp_v = graph.machine_predecessor[action.where];
+
+        // Update machine edges
+        graph.machine_successor[action.which] = action.where;
+        graph.machine_predecessor[action.where] = action.which;
+
         if (mp_v != -1) {
-            graph.machine_edges[mp_v] = action.which;
+            graph.machine_successor[mp_v] = action.which;
         } else {
-            // Update first machine info
+            // Update first operation on machine if needed
             auto it = std::ranges::find(graph.first_machine_operation, action.where);
             if (it != graph.first_machine_operation.end()) {
                 *it = action.which;
             }
         }
-        graph.reverse_machine_edges[action.which] = mp_v;
+
+        graph.machine_predecessor[action.which] = mp_v;
+
         if (ms_u != -1) {
-            graph.reverse_machine_edges[ms_u] = mp_u;
+            graph.machine_predecessor[ms_u] = mp_u;
         } else {
-            // Update first machine info
+            // Update last operation on machine if needed
             auto it = std::ranges::find(graph.last_machine_operation, action.which);
             if (it != graph.last_machine_operation.end()) {
                 *it = mp_u;
             }
         }
-        graph.machine_edges[mp_u] = ms_u;
+
+        graph.machine_successor[mp_u] = ms_u;
     } else {
-        int ms_u = graph.machine_edges[action.which];
-        int ms_v = graph.machine_edges[action.where];
-        int mp_u = graph.reverse_machine_edges[action.which];
-        // int mp_v = graph.reverse_machine_edges[action.v];
-        graph.machine_edges[action.where] = action.which;
-        graph.reverse_machine_edges[action.which] = action.where;
+        // Backward move: swap operation 'which' after 'where'
+        int ms_u = graph.machine_successor[action.which];
+        int ms_v = graph.machine_successor[action.where];
+        int mp_u = graph.machine_predecessor[action.which];
+
+        // Update machine edges
+        graph.machine_successor[action.where] = action.which;
+        graph.machine_predecessor[action.which] = action.where;
+
         if (mp_u != -1) {
-            graph.machine_edges[mp_u] = ms_u;
+            graph.machine_successor[mp_u] = ms_u;
         } else {
-            // Update first machine info
+            // Update first operation on machine if needed
             auto it = std::ranges::find(graph.first_machine_operation, action.which);
             if (it != graph.first_machine_operation.end()) {
                 *it = ms_u;
             }
         }
-        graph.reverse_machine_edges[ms_u] = mp_u;
+
+        graph.machine_predecessor[ms_u] = mp_u;
+
         if (ms_v != -1) {
-            graph.reverse_machine_edges[ms_v] = action.which;
+            graph.machine_predecessor[ms_v] = action.which;
         } else {
-            // Update first machine info
+            // Update last operation on machine if needed
             auto it = std::ranges::find(graph.last_machine_operation, action.where);
             if (it != graph.last_machine_operation.end()) {
                 *it = action.which;
             }
         }
-        graph.machine_edges[action.which] = ms_v;
+
+        graph.machine_successor[action.which] = ms_v;
     }
 
     // Recalculate schedule times and critical blocks
@@ -550,8 +563,8 @@ void TabuSearch::search(unsigned long long int max_iteration, const std::functio
     }
 
     // Final results output
-    std::clog << "iteration: " << iteration
-              << ", best_makespan: " << best_schedule.makespan
-              << std::endl;
-    best_schedule.export_to_csv("../../output/result.csv");
+    //    std::clog << "iteration: " << iteration
+    //              << ", best_makespan: " << best_schedule.makespan
+    //              << std::endl;
+    // best_schedule.export_to_csv("../../output/result.csv");
 }

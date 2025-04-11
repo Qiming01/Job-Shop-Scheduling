@@ -6,13 +6,14 @@ import colorsys
 import random
 
 # 从文件读取CSV数据
-csv_file_path = 'jssp_schedule.csv'
+csv_file_path = 'result.csv'
 df = pd.read_csv(csv_file_path)
 
 # 获取唯一的作业ID和机器ID
 unique_jobs = sorted(df['Job'].unique())
 job_count = len(unique_jobs)
 machines = sorted(df['Machine'].unique())
+
 
 # 创建一个避开红色的colorscale
 def generate_colors_avoiding_red(n):
@@ -54,6 +55,7 @@ def generate_colors_avoiding_red(n):
             colors.append('rgb(70, 130, 180)')  # 钢蓝色
 
     return colors
+
 
 # 生成每个作业的颜色，避开红色系
 job_colors = {job: color for job, color in zip(unique_jobs, generate_colors_avoiding_red(job_count))}
@@ -112,8 +114,8 @@ for task in task_data:
         f"<b>Machine:</b> {task['Machine']}<br>"
         f"<b>Start Time:</b> {task['Start']}<br>"
         f"<b>End Time:</b> {task['Finish']}<br>"
-        f"<b>Duration:</b> {task['Finish']-task['Start']}<br>"
-        f"<b>Critical:</b> {'Yes' if task['IsCritical']==1 else 'No'}"
+        f"<b>Duration:</b> {task['Finish'] - task['Start']}<br>"
+        f"<b>Critical:</b> {'Yes' if task['IsCritical'] == 1 else 'No'}"
     )
 
     # 添加主任务条形
@@ -213,7 +215,7 @@ fig.update_layout(
     },
     barmode='overlay',
     autosize=True,  # 使图表自动调整大小
-    height=800,     # 默认高度，会根据屏幕自动调整
+    height=800,  # 默认高度，会根据屏幕自动调整
     margin=dict(l=150, r=50, t=100, b=80),
     xaxis=dict(
         title="Time",
