@@ -1,17 +1,32 @@
 # Tabu Search for Job Shop Scheduling Problem
 
-**Job Shop Scheduling Problem (JSSP)** is a classic combinatorial optimization problem in operations research and computer science. It involves scheduling a set of jobs, where each job consists of a sequence of tasks that must be processed in a specific order on different machines. Each task requires a specific machine for a certain amount of time, and no machine can handle more than one task at a time.
+The **Job Shop Scheduling Problem (JSSP)** is a classic combinatorial optimization problem in operations research and
+computer science. It involves scheduling a set of jobs, where each job consists of a sequence of tasks that must be
+processed in a specific order on different machines. Each task requires a specific machine for a certain amount of time,
+and no machine can handle more than one task at a time.
 
-The main goal is to determine a schedule — assigning start times to all tasks — such that the overall completion time (called the **makespan**) is minimized, while satisfying all constraints:
+The main objective is to determine a schedule — assigning start times to all tasks — such that the overall completion
+time (called the **makespan**) is minimized, while satisfying all constraints:
 
 - **Precedence constraints**: Tasks within the same job must be processed in the given order.
-- **Resource constraints**: A machine can process only one task at a time, and a task cannot be interrupted once started.
+- **Resource constraints**: A machine can process only one task at a time, and a task cannot be interrupted once
+  started.
 
-JSSP is known to be **NP-hard**, meaning it is computationally challenging to solve optimally for large instances. It has wide applications in manufacturing, production planning, and service systems.
+JSSP is known to be **NP-hard**, meaning it is computationally challenging to solve optimally for large instances. It
+has wide applications in manufacturing, production planning, and service systems.
 
-------
+This project implements a Tabu Search algorithm for solving the JSSP in C++.
+
+**Reference**:  
+[1] C. Zhang, P. Li, Z. Guan, and Y. Rao, “A tabu search algorithm with a new neighborhood structure for the job shop
+scheduling problem,” *Computers & Operations Research*, vol. 34, no. 11, pp. 3229–3242, 2007, doi:
+10.1016/j.cor.2005.12.002.
+
+---
 
 ## Benchmark
+
+Test environment: 13th Gen Intel(R) Core(TM) i5-13490F @ 2.50 GHz
 
 | Instance | n×m   | 最优解      | Best  | Avg    | Worst | Avg. Iterations | Avg. Time (ms) |
 |----------|-------|----------|-------|--------|-------|-----------------|----------------|
@@ -110,6 +125,7 @@ int main() {
 }
 ```
 
-After calling the `TabuSearch::export_result(path)` function, the scheduling results will be written to a CSV file at the specified path. You can then use the `draw.py` script located in the `output` directory to generate a Gantt chart.
+After calling the `TabuSearch::export_result(path)` function, the scheduling results will be written to a CSV file at
+the specified path. You can then use the `draw.py` script located in the `output` directory to generate a Gantt chart.
 
 ![FT10-gantt_chart](output/FT10-gantt_chart.png)
