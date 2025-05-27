@@ -11,7 +11,6 @@
 void Schedule::calculate_time_info() {
     int n = graph.node_num;
     auto forward_queue = graph.topological_sort(false);// Forward topological order
-    auto backward_queue = graph.topological_sort(true);// Reverse topological order
 
     // Forward pass to calculate the earliest start times (R values)
     time_info.resize(n);
@@ -45,8 +44,8 @@ void Schedule::calculate_time_info() {
     }
 
     // Backward pass to calculate Q values
-    for (int i = 1; i < n - 1; i++) {
-        int curr_node = backward_queue[i];
+    for (int i = n - 2; i > 0; --i) {
+        int curr_node = forward_queue[i];
         int next_node_time = 0;
 
         // Consider job successor constraints
