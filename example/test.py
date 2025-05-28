@@ -2,7 +2,7 @@ import time
 import jsp
 
 # 加载实例
-instance = jsp.load_instance("../../instance/ft/ft10.txt")
+instance = jsp.load_instance("../instance/ft/ft10.txt")
 
 # 初始化搜索器
 tabu = jsp.TabuSearch(instance)

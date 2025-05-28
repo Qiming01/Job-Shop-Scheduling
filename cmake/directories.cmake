@@ -9,9 +9,11 @@ set(publish_bin_release ${CMAKE_CURRENT_SOURCE_DIR}/bin/release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${publish_bin_debug})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${publish_bin_release})
 
-# 如果外部没有传入 PYTHON_MODULE_OUTPUT_DIR，则设置默认值
-if (NOT DEFINED PYTHON_MODULE_OUTPUT_DIR)
+# 如果外部没有传入 CMAKE_LIBRARY_OUTPUT_DIRECTORY，则设置默认值
+if (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(PYTHON_MODULE_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin/python_module")
+else ()
+    set(PYTHON_MODULE_OUTPUT_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 endif ()
 
 message(STATUS "Python module output directory: ${PYTHON_MODULE_OUTPUT_DIR}")

@@ -30,6 +30,8 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
+        print(f"扩展模块将安装到: {extdir}")  # 调试输出
+
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
@@ -67,7 +69,7 @@ setup(
     author='Ming Qi',
     author_email='qiming01@outlook.com',
     description='Job Shop Scheduling Python Module',
-    ext_modules=[CMakeExtension('jsp', sourcedir='../../')],
+    ext_modules=[CMakeExtension('jsp', sourcedir='./')],
     cmdclass={'build_ext': CMakeBuild},
     zip_safe=False,
 )

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 project(JobShopScheduling)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
-
 # 设置C++标准和相关属性
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
